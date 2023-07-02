@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connect 4</title>
+    <style>
+        /* Add CSS styles for the game board */
+        .board {
+            display: flex;
+            flex-wrap: wrap;
+            width: 500px;
+            margin: 0 auto;
+        }
+
+        .cell {
+            width: 70px;
+            height: 70px;
+            background-color: #ddd;
+            border: 1px solid #777;
+            box-sizing: border-box;
+        }
+
+        .cell:hover {
+            background-color: #bbb;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Connect 4</h1>
+    <div id="board"></div>
+
+    <script>
+        // JavaScript code for Connect 4 game
+
+        // Define constants
+        const ROWS = 6;
+        const COLS = 7;
+        const EMPTY = ' ';
+        const PLAYER1 = 'X';
+        const PLAYER2 = 'O';
+
+        // Create the game board
+        let board = [];
+        for (let row = 0; row < ROWS; row++) {
+            board.push(Array.from({ length: COLS }, () => EMPTY));
+        }
+
+        // Create the HTML elements for the game board
+        const boardContainer = document.getElementById('board');
+        const cells = [];
+        for (let row = 0; row < ROWS; row++) {
+            for (let col = 0; col < COLS; col++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.row = row;
+                cell.dataset.col = col;
+                cells.push(cell);
+                boardContainer.appendChild(cell);
+            }
+        }
+
+        // Function to check if a player has won
+        function checkWin(player) {
+            // Check rows
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col <= COLS - 4; col++) {
+                    if (
+                        board[row][col] === player &&
+                        board[row][col + 1] === player &&
+                        board[row][col + 2] === player &&
+                        board[row][col + 3] === player
+                    ) {
+                        return true;
+                    }
+                }
+            }
+
+            // Check columns
+            for (let row = 0; row <= ROWS - 4; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    if (
+                        board[row][col] === player &&
+                        board[row + 1][col] === player &&
+                        board[row + 2][col] === player &&
+                        board[row + 3][col] === player
+                    ) {
+                        return true;
+                    }
+                }
+            }
+
+            // Check diagonals (top-left to bottom-right)
+            for (let row = 0; row <= ROWS - 4; row++) {
+                for (let col = 0; col <= COLS - 4; col++) {
+                    if (
+                        board[row][col] === player &&
+                        board[row + 1][col + 1] === player &&
+                        board[row + 2][col + 2] === player &&
+                        board[row + 3][col + 3] === player
+                    ) {
+                        return true;
+                    }
+                }
+            }
+
+            // Check diagonals (bottom-left to top-right)
+            for (let row = 3; row < ROWS; row++) {
+                for (let col = 0; col <= COLS - 4; col++) {
+                    if (
+                        board[row][col] === player &&
+                        board[row - 1][col + 1] === player &&
+                        board[row - 2][col + 2] === player &&
+                        board[row - 3][col + 3] === player
+                    ) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        // Function to handle player moves
+        function makeMove(col, player) {
+            for (let row = ROWS - 1; row >= 0; row--) {
+                if (board[row][col] === EMPTY) {
+                    board[row][col] = player;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Function to handle a click on a cell
+        function handleClick(event) {
+            const col = parseInt(event.target.dataset.col);
+            if (makeMove(col, PLAYER1)) {
+                event.target.textContent = PLAYER1;
+                event.target.style.backgroundColor = 'red';
+
+                if (checkWin(PLAYER1)) {
+                    alert('Player 1 wins!');
+                    resetBoard();
+                    return;
+                }
+
+                // Uncomment the following line to enable player vs. AI mode
+                makeAIMove();
+            }
+        }
+
+        // Function to reset the game board
+        function resetBoard() {
+            board = [];
+            for (let row = 0; row < ROWS; row++) {
+                board.push(Array.from({ length: COLS }, () => EMPTY));
+            }
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.style.backgroundColor = '#ddd';
+            });
+        }
+
+        // Uncomment the following function to enable player vs. AI mode
+        // Function to make an AI move
+        // Function to make an AI move
+        function makeAIMove() {
+            // Check for winning moves
+            for (let col = 0; col < COLS; col++) {
+                const copyBoard = JSON.parse(JSON.stringify(board));
+                if (makeMove(col, PLAYER2, copyBoard)) {
+                    if (checkWin(PLAYER2, copyBoard)) {
+                        if (makeMove(col, PLAYER2)) {
+                            const cell = cells.find(cell => cell.dataset.col === col.toString());
+                            cell.textContent = PLAYER2;
+                            cell.style.backgroundColor = 'yellow';
+                            alert('Player 2 wins!');
+                            resetBoard();
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // Check for blocking opponent's winning moves
+            for (let col = 0; col < COLS; col++) {
+                const copyBoard = JSON.parse(JSON.stringify(board));
+                if (makeMove(col, PLAYER1, copyBoard)) {
+                    if (checkWin(PLAYER1, copyBoard)) {
+                        if (makeMove(col, PLAYER2)) {
+                            const cell = cells.find(cell => cell.dataset.col === col.toString());
+                            cell.textContent = PLAYER2;
+                            cell.style.backgroundColor = 'yellow';
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // Choose a random available column
+            const emptyCols = [];
+            for (let col = 0; col < COLS; col++) {
+                if (board[0][col] === EMPTY) {
+                    emptyCols.push(col);
+                }
+            }
+            const randomCol = emptyCols[Math.floor(Math.random() * emptyCols.length)];
+            if (makeMove(randomCol, PLAYER2)) {
+                const cell = cells.find(cell => cell.dataset.col === randomCol.toString());
+                cell.textContent = PLAYER2;
+                cell.style.backgroundColor = 'yellow';
+
+                if (checkWin(PLAYER2)) {
+                    alert('Player 2 wins!');
+                    resetBoard();
+                    return;
+                }
+            }
+        }
+
+
+        // Add event listener for cell clicks
+        cells.forEach(cell => cell.addEventListener('click', handleClick));
+    </script>
+</body>
+</html>
